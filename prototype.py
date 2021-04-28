@@ -1,22 +1,35 @@
 #!/usr/bin/python3
 
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
 import cmd, sys, getpass, datetime, os, json#, dbClass
 print('Загрузка TensorFlow...')
 from ediag import *
 import matplotlib.pyplot as plt
+from EDDB import *
 
 if os.path.exists('db_config.json'):
     with open('db_config.json') as json_file:
         db = json.load(json_file)
 else:
-    ans = input('Нет файла db_config.json!\n Создать?')
+    ans = input('Нет файла db_config.json!\nСоздать y/n?')
     if ans == 'y':
         db_config()
+        with open('db_config.json') as json_file:
+            db = json.load(json_file)
     else:
         print('No db_config')
         quit(1)
 
-from EDDB import *
 print('Подключение к базе данных')
 database = edDB()
 database.connectToDB(db['Host'], db['UserName'], db['Password'], db['DBName'])
@@ -96,15 +109,18 @@ class EDiagShell(cmd.Cmd):
             if self.project == None:
                 print('Вы не в проекте')
             else:
+                args = arg.split(' ')
+                self.project.loaddata(args[-1])
                 rur = self.project.remainingresource(os.path.abspath(arg))
                 if rur != False:
                     print(f'Остаточный ресурс {round(rur[-1][0][0] * 100, 1)}%')
-                    if rur[-1][0][0] < rur[0][0][0]:
+                    if rur[-1][0][0] <= rur[0][0][0]:
                         print('Подшипник изнашивается')
                     else:
                         print('Подшипник обкатывается')
 
                     database.insert_dots([(self.project.name, str(r[0][0])) for r in rur])
+                    #print(f'{bcolors.WARNING}!ВНИМАНИЕ! РЕЗКОЕ ИЗМЕНЕНИЕ ТРЕНДА !ВНИМАНИЕ!{bcolors.ENDC}')
                     #print([r[0][0] for r in rur])
         else:
             print('Укажите путь!')
