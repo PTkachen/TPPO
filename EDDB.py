@@ -52,7 +52,7 @@ class edDB:
         self.connection.commit()
 
         return dots
-    def delete_book(self, book_id):
+    def delete_dots_from_trend(self, book_id):
         #db_config = read_db_config()
 
         query = "DELETE FROM Trend WHERE PROJNAME = %s"
@@ -76,6 +76,47 @@ class edDB:
     	self.cursor.execute(sql)
 
 
-    def SelectTable(self):
+    def SelectTrendTable(self):
     	self.cursor.execute("SELECT * FROM Trend")
 		myresult = self.cursor.fetchall()
+
+
+
+
+	def SelectProjectsTable(self):
+    	self.cursor.execute("SELECT * FROM Projects")
+		myresult = self.cursor.fetchall()
+
+	def CreateProjectsTable(self):
+    	sql ='''CREATE TABLE Projects(
+       	ID INT NOT NULL AUTO_INCREMENT,
+       	PROJNAME CHAR(20),
+       	BEARINGSCOUNT INT,
+       	SENSORSCOUNT INT,
+        PRIMARY KEY (ID)
+    	)'''
+
+    def delete_dots_from_projects(self, book_id):
+        #db_config = read_db_config()
+
+        query = "DELETE FROM Projects WHERE PROJNAME = %s"
+
+        self.cursor.execute(query, (book_id,))
+
+        self.connection.commit()
+
+    def get_Project_stats(self, projname):
+        query = "SELECT BEARINGSCOUNT,SENSORSCOUNT FROM Trend WHERE PROJNAME = %s"
+
+        self.cursor.execute(query, (projname,))
+
+        dots = self.cursor.fetchall()
+
+        self.connection.commit()
+
+    def insert_project_stats(self, stats):
+        query = "INSERT INTO Projects(PROJNAME,BEARINGSCOUNT,SENSORSCOUNT) VALUES(%s,%s,%s)"
+
+        self.cursor.executemany(query, stats)
+
+        self.connection.commit()
