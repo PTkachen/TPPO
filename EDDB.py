@@ -35,10 +35,10 @@ class edDB:
 
         return False
 
-    def insert_dots(self, dots):
+    def insert_dot(self, dot, projname):
         query = "INSERT INTO Trend(PROJNAME,DOT) VALUES(%s,%s)"
 
-        self.cursor.executemany(query, dots)
+        self.cursor.execute(query, (projname,dot,))
 
         self.connection.commit()
         
