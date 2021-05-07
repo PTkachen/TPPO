@@ -35,29 +35,30 @@ class EDiag:
             x = np.var(FILE[:, 0])
             print(f'loaded file {i+1}/{N}', end = '\r')
                    #KURT
+
             # Определяем точку невозврата. Если точка найдена flag = 1
-            if abs(vect_pr[0] - nu) > 2 * x and flag == 0:
-                flag = 1
-                
             # Пока точка не найдена, записываем во вспомогательный массив все значения
             if flag == 0:
                 startPoint.append(vect_pr / np.linalg.norm(vect_pr))
-            
+            if abs(vect_pr[0] - nu) > 2 * x and flag == 0:
+                flag = 1
+
+
             # Если точка невозврата найдена, записываем в основной массив только три значения - вопроса, для которых ответ будет 1 - эквивален 100% остаточного ресурса.
             # Изменяем значение flag = 2, последующие значения будем сразу записывать в основной массив вопросов
             if flag == 1:
                 NTRUE = len(startPoint) - 1
                 tdata.append(startPoint[0])
                 tdata.append(startPoint[-1])
-                tdata.appent(startPoint[round(NTRUE / 2]))
+                tdata.append(startPoint[round(NTRUE / 2)])
                 flag = 2
-                for i in 3:
+                for i in range(3):
                     tout.append(1)
-                    
+
             # Записываем вопросы и ответы после точки невозврата
             if flag == 2:
                 tdata.append(vect_pr / np.linalg.norm(vect_pr))
-                tout.append(tout[-1] - (1 / (N - TRUE - 1))
+                tout.append(tout[-1] - (1 / (N - NTRUE - 1)))
 
         print(f'Loaded all {N} files, NTRUE = {NTRUE}')
         # Обучение
@@ -67,7 +68,7 @@ class EDiag:
         print('fitting model...')
         n.learn(np.array(tdata), np.array(tout))
         n.save('model')
-        #return (np.array(tdata), np.array(tout))
+        return (np.array(tdata), np.array(tout))
 
     #Метод вычисления признаков для нейронной сети. В качестве параметров: FILE - файл с текущими показаниями, self - ссылка на самого себя. Возвращает вектор признаков.
     def markup(self, FILE):
@@ -81,8 +82,8 @@ class EDiag:
         PvT = max(np.absolute(FILE[:, 0]))
         CF = PvT / RMS
         vect = np.array([KURT, VARIANCE, RMS, SF, PvT, CF])
-        #return vect / np.linalg.norm(v)
-        return vect
+        return vect / np.linalg.norm(vect)
+        #return vect
 
     def markupfrompathnorm(self, file):
         FILE = np.genfromtxt(f'{self.path}/{file}', delimiter = '\t')
