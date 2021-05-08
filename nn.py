@@ -18,12 +18,19 @@ class NN:
             print('error')
             return
 
-        self.model.add(Dense(12, input_dim=6, activation='relu'))
+        self.model.add(Dense(19, input_dim=6, activation='relu'))
         self.model.add(Dense(8, activation='relu'))
+        self.model.add(Dense(8, activation='relu'))
+        #self.model.add(Dense(8, activation='relu'))
+        #self.model.add(Dense(5, activation='softmax')) #В этих штуках ничего не меняется(как по мне )
+        #self.model.add(Dense(15, activation='softplus')) #
+        #self.model.add(Dense(5, activation='softsign')) #
+        #self.model.add(Dense(25, activation='tanh')) #
+        #self.model.add(Dense(20, activation='selu')) #
         self.model.add(Dense(1, activation='sigmoid'))
         self.model.compile(loss='binary_crossentropy',
                            optimizer='adam', metrics=['accuracy'])
-        self.model.fit(x, y, epochs=150, batch_size=10, verbose=0)
+        self.model.fit(x, y, epochs=1500, batch_size=10, verbose=0)
 
     def predict(self, X):
         predictions = self.model.predict(X)
