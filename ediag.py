@@ -15,11 +15,15 @@ class EDiag:
     def loaddata(self, p):
         self.path = p
         if os.path.isdir(p):
-            self.files = os.listdir(p)
+            self.files = [f'{p}/{x}' for x in  os.listdir(p)]
         elif os.path.isfile(p):
             self.files = [p]
         else:
-            print("It is a special file (socket, FIFO, device file)" )
+            print("Специальный файл (socket, FIFO, device file)" )
+            return False
+
+        return True
+
     #Метод подготовки данных для обчуния нейронной сети. В качестве параметров: self - путь для файлов с показаниями
     def preparation(self):
         NTRUE = 0 # Номер последнего файла до точки невозврата
@@ -29,11 +33,11 @@ class EDiag:
         tout = [] # Массив ответов для нейронной сети
         startPoint = [] # Массив для значений до точки невозврата
         for i, file in enumerate(self.files):
-            FILE = np.genfromtxt(f'{self.path}/{file}', delimiter = '\t')
+            FILE = np.genfromtxt(file, delimiter = '\t')
             vect_pr = self.markup(FILE)
             nu = np.average(FILE[:, 0])
             x = np.var(FILE[:, 0])
-            print(f'loaded file {i+1}/{N}', end = '\r')
+            print(f'Загружен файл {i+1}/{N}', end = '\r')
                    #KURT
 
             # Определяем точку невозврата. Если точка найдена flag = 1
@@ -60,12 +64,12 @@ class EDiag:
                 tdata.append(vect_pr / np.linalg.norm(vect_pr))
                 tout.append(tout[-1] - (1 / (N - NTRUE - 1)))
 
-        print(f'Loaded all {N} files, NTRUE = {NTRUE}')
+        print(f'Загружено {N} фалов , NTRUE = {NTRUE}')
         # Обучение
         n = NN()
         #print(np.array(tout))
         #print(np.array(tdata))
-        print('fitting model...')
+        print('Обучение...')
         n.learn(np.array(tdata), np.array(tout))
         n.save('model')
         return (np.array(tdata), np.array(tout))
@@ -86,7 +90,7 @@ class EDiag:
         #return vect
 
     def markupfrompathnorm(self, file):
-        FILE = np.genfromtxt(f'{self.path}/{file}', delimiter = '\t')
+        FILE = np.genfromtxt(file, delimiter = '\t')
         n = len(FILE[:, 0])
         x = np.var(FILE[:, 0])
         VARIANCE = 1 / n * sum((FILE[:, 0] - x) ** 2)
@@ -102,22 +106,11 @@ class EDiag:
     #Метод определения остаточного ресурса. На вход получает self - ссылку на самого себя, vect - вектор признаков. Возвращает численное значение остаточного ресурса
     def remainingresource(self, p):
         n = NN('model')
-        logs = []
-        if os.path.isdir(p):
-            logs = os.listdir(p)
-            for i in range(len(logs)):
-                logs[i] = f'{p}/{logs[i]}'
-        elif os.path.isfile(p):
-            logs = [p]
-        else:
-            print("It is a special file (socket, FIFO, device file)" )
-            return False
-
         rur = []
-        for i, log in enumerate(logs):
-            print(f'Loaded file {i+1}/{len(logs)}', end = '\r')
+        for i, log in enumerate(self.files):
+            print(f'Загружен файл {i+1}/{len(self.files)}', end = '\r')
             rur.append(n.predict([list(self.markupfrompathnorm(log))]))
-        print(f'Loaded all {len(logs)} files!')
+        print(f'Загружено {len(self.files)} файлов!            ')
         return rur
 
         #return n.predict([list(vect)])
