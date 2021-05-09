@@ -33,9 +33,13 @@ else:
 print('Подключение к базе данных')
 database = edDB()
 database.connectToDB(db['Host'], db['UserName'], db['Password'], db['DBName'])
-if not database.checkTableExists():
+if not database.checkTableExists('Trend'):
     print(f'Таблица {db["DBName"]}.Trend не существует!\nСоздание...')
     database.CreateTrendTable()
+
+if not database.checkTableExists('Projects'):
+    print(f'Таблица {db["DBName"]}.Projects не существует!\nСоздание...')
+    database.CreateProjectsTable()
 #else:
     #database.quickFix()
 
@@ -48,11 +52,8 @@ class EDiagShell(cmd.Cmd):
     prompt = 'ediag> '
     project = None
     username = getpass.getuser()
-    listp = []
+    listp = database.SelectProjectsTable()
     intro = f'Добро пожаловать в equipmentdiagnostics {username}!'
-    if os.path.exists('projects.json'):
-        with open('projects.json') as json_file:
-            listp = json.load(json_file)
 
     def do_quit(self, arg):
         'завершить equipmentdiagnostics'
@@ -65,10 +66,13 @@ class EDiagShell(cmd.Cmd):
     def do_createp(self, arg):
         'Создать проект \nПример: ediag> createp <имя проекта>'
         if arg:
-            self.listp.append(arg)
-            print(f'Создан проект {arg}!')
-            with open('projects.json', 'w') as f:
-                json.dump(self.listp, f)
+            if arg in self.listp:
+                print(f'{arg} уже существует!')
+            else:
+                #self.listp.append(arg)
+                database.insert_project_stats(arg, 1, 1, '1.0')
+                self.listp = database.SelectProjectsTable()
+                print(f'Создан проект {arg}!')
         else:
             print('Укажите имя!')
 
@@ -89,6 +93,10 @@ class EDiagShell(cmd.Cmd):
             if arg in self.listp:
                 self.prompt = f'{arg}@ediag> '
                 self.project = EDiag(arg)
+                if database.dataexists(arg):
+                    print(f'Остаточный ресурс: {round(database.get_lastrur(arg) * 100, 1)}%')
+                else:
+                    print(f'В проекте {arg} нет данных!')
             else:
                 print(f'Проект {arg} не существует!')
         else:
@@ -110,18 +118,20 @@ class EDiagShell(cmd.Cmd):
                 print('Вы не в проекте')
             else:
                 args = arg.split(' ')
-                self.project.loaddata(args[-1])
-                rur = self.project.remainingresource(os.path.abspath(arg))
-                if rur != False:
-                    print(f'Остаточный ресурс {round(rur[-1][0][0] * 100, 1)}%')
-                    if rur[-1][0][0] <= rur[0][0][0]:
-                        print('Подшипник изнашивается')
-                    else:
-                        print('Подшипник обкатывается')
+                if self.project.loaddata(args[-1]):
+                    rur = self.project.remainingresource(os.path.abspath(arg))
+                    if True:
+                        print(f'Остаточный ресурс {round(rur[-1][0] * 100, 1)}%')
+                        if rur[-1][0] <= rur[0][0]:
+                            print('Подшипник изнашивается')
+                        else:
+                            print('Подшипник обкатывается')
 
-                    database.insert_dots([(self.project.name, str(r[0][0])) for r in rur])
-                    #print(f'{bcolors.WARNING}!ВНИМАНИЕ! РЕЗКОЕ ИЗМЕНЕНИЕ ТРЕНДА !ВНИМАНИЕ!{bcolors.ENDC}')
-                    #print([r[0][0] for r in rur])
+                        print(f'Запись в базу данных {database.dbname}!')
+                        database.insert_dots([(self.project.name, str(r[0])) for r in rur])
+                        database.update_project(self.project.name, rur[-1][0])
+                        #print(f'{bcolors.WARNING}!ВНИМАНИЕ! РЕЗКОЕ ИЗМЕНЕНИЕ ТРЕНДА !ВНИМАНИЕ!{bcolors.ENDC}')
+                        #print([r[0][0] for r in rur])
         else:
             print('Укажите путь!')
 
@@ -130,21 +140,22 @@ class EDiagShell(cmd.Cmd):
         if self.project == None:
             print('Вы не в проекте')
         else:
-            mes = np.array([m[0] for m in database.get_dots(self.project.name)])
+            mes = np.array(database.get_dots(self.project.name))
             if len(mes) <= 0:
                 print('Нет данных для построения')
             else:
+                print('Построение графика...')
                 plt.clf()
                 plt.plot(mes)
                 plt.legend(['Остатончный ресурс'])
                 if arg:
                     img = f'{os.getcwd()}/{arg}.png'
-                    print(f'График стренда построен! file://{img}')
                     plt.savefig(img, dpi = 300)
+                    print(f'График стренда построен!\nfile://{img}')
                 else:
                     img = f'{os.getcwd()}/{datetime.date.today()}.png'
-                    print(f'График стренда построен! file://{img}')
                     plt.savefig(img, dpi = 300)
+                    print(f'График стренда построен!\nfile://{img}')
 
     def do_removep(self, arg):
         'Удалить проект'
@@ -152,10 +163,9 @@ class EDiagShell(cmd.Cmd):
             if arg and arg in self.listp:
                 a = input(f'Вы действительно хотите удалить {arg}? y/n ')
                 if a == 'y':
-                    self.listp.remove(arg)
-                    with open('projects.json', 'w') as f:
-                        json.dump(self.listp, f)
+                    #self.listp.remove(arg)
                     database.delete_book(arg);
+                    self.listp = database.SelectProjectsTable()
                     print(f'Удален проект {arg}')
             else:
                 if arg:
@@ -169,8 +179,8 @@ class EDiagShell(cmd.Cmd):
             if self.project == None:
                 print('Вы не в проекте')
             else:
-                self.project.loaddata(arg)
-                self.project.preparation()
+                if self.project.loaddata(arg):
+                    self.project.preparation()
         else:
             print('Укажите путь!')
 
