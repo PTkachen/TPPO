@@ -152,7 +152,7 @@ class edDB:
         return float(self.cursor.fetchone()[0])
 
     def get_Project_stats(self, projname):
-        query = "SELECT BEARINGSCOUNT,SENSORSCOUNT FROM Trend WHERE PROJNAME = %s"
+        query = "SELECT BEARINGSCOUNT,SENSORSCOUNT FROM Projects WHERE PROJNAME = %s"
 
         self.cursor.execute(query, (projname,))
 
