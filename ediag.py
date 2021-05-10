@@ -95,6 +95,8 @@ class EDiag:
         FILE = np.genfromtxt(file, delimiter = '\t')
         n = len(FILE[:, 0])
         x = np.var(FILE[:, 0])
+        //x - среднее
+        x = numpy.mean(FILE[:,0])
         VARIANCE = 1 / n * sum((FILE[:, 0] - x) ** 2)
         RMS = math.sqrt(sum(FILE[:, 0] ** 2) / n)
         KURT = sum((FILE[:, 0] - x) ** 4 ) / (n * VARIANCE ** 2) - 3
@@ -134,14 +136,14 @@ class EDiag:
 
             # Определяем точку невозврата. Если точка найдена flag = 1
             # Пока точка не найдена, записываем во вспомогательный массив все значения
-            if flag == 0:
-                startPoint.append(vect_pr / np.linalg.norm(vect_pr))
-
             if abs(vect_pr[0] - nu) > 2 * x and flag == 0:
                 flag = 1
 
-
             # Если точка невозврата найдена, записываем в основной массив только три значения - вопроса, для которых ответ будет 1 - эквивален 100% остаточного ресурса.
+            
+            if flag == 0:
+                startPoint.append(vect_pr / np.linalg.norm(vect_pr))
+            
             # Изменяем значение flag = 2, последующие значения будем сразу записывать в основной массив вопросов
             if flag == 1:
                 NTRUE = len(startPoint) - 1
