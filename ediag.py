@@ -44,7 +44,7 @@ class EDiag:
                    #KURT
             # Определяем точку невозврата. Если точка найдена flag = 1
             # Пока точка не найдена, записываем во вспомогательный массив все значения
-            if abs(abs(vect_pr[0] - nu)) > abs(x * 600) and flag == 0:
+            if abs(vect_pr[0] - nu) > abs(x * 600) and flag == 0:
                 flag = 1
                 #print(i+1)
             #x2.append(abs(x * 500))
