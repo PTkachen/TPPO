@@ -1,7 +1,8 @@
-import mysql.connector, json, getpass
+import mysql.connector, json, getpass, os
 import numpy as np
 
-def db_config():
+
+def createconfig():
     cfg = {}
     host = cfg['Host'] = input('host: ')
     cfg['DBName'] = input('Имя базы данных: ')
@@ -10,18 +11,51 @@ def db_config():
     with open('db_config.json', 'w') as f:
         json.dump(cfg, f)
 
+def configisvalid():
+    if os.path.exists('db_config.json'):
+        with open('db_config.json') as json_file:
+            db = json.load(json_file)
+        try:
+            connection = mysql.connector.connect(
+                host=db['Host'],
+                user=db['UserName'],
+                passwd=db['Password'],
+                database=db['DBName'],
+                auth_plugin='mysql_native_password')
+            return True
+        except mysql.connector.Error as err:
+            print(err)
+            return False
+    else:
+        print('Конфиг пропал!')
+
+def loadconfig():
+    if os.path.exists('db_config.json'):
+        while not configisvalid():
+            x = input('Cofig error! y/n')
+            if x == 'y':
+                createconfig()
+            else:
+                quit(1)
+        with open('db_config.json') as json_file:
+            db = json.load(json_file)
+            return db
+    else:
+        a = input('No config y/n')
+        createconfig()
+        return loadconfig()
+
+
 class edDB:
-    dbname = 'placeholder, just in case'
-    def connectToDB(self, host, user, password, db):
-     self.connection = mysql.connector.connect(
-        host=host,
-        user=user,
-        passwd=password,
-        database=db,
-        auth_plugin='mysql_native_password'
-     )
-     self.dbname = db
-     self.cursor = self.connection.cursor()
+    def __init__(self, host, user, password, db):
+        self.connection = mysql.connector.connect(
+            host=host,
+            user=user,
+            passwd=password,
+            database=db,
+            auth_plugin='mysql_native_password')
+        self.dbname = db
+        self.cursor = self.connection.cursor()
 
     def quickFix(self):
         self.cursor.execute('''DROP TABLE IF EXISTS fix;
