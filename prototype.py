@@ -10,6 +10,19 @@ class bcolors:
     ENDC = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
+art = r'''                   _                            _
+                  (_)                          | |
+   ___  __ _ _   _ _ _ __  _ __ ___   ___ _ __ | |_
+  / _ \/ _` | | | | | '_ \| '_ ` _ \ / _ \ '_ \| __|
+ |  __/ (_| | |_| | | |_) | | | | | |  __/ | | | |_
+  \___|\__, |\__,_|_| .__/|_| |_| |_|\___|_| |_|\__|
+     | (_)| |       | |              | | (_)
+   __| |_ |_| _  __ |_| __   ___  ___| |_ _  ___ ___
+  / _` | |/ _` |/ _` | '_ \ / _ \/ __| __| |/ __/ __|
+ | (_| | | (_| | (_| | | | | (_) \__ \ |_| | (__\__ \
+  \__,_|_|\__,_|\__, |_| |_|\___/|___/\__|_|\___|___/
+                 __/ |
+                |___/                                '''
 
 import cmd, sys, getpass, datetime, os, json#, dbClass
 print('Загрузка TensorFlow...')
@@ -43,7 +56,7 @@ class EDiagShell(cmd.Cmd):
     project = None
     username = getpass.getuser()
     listp = database.SelectProjectsTable()
-    intro = f'Добро пожаловать в equipmentdiagnostics {username}!'
+    intro = art + f'\nДобро пожаловать в equipmentdiagnostics {username}!'
 
     def do_quit(self, arg):
         'завершить equipmentdiagnostics'
@@ -109,7 +122,7 @@ class EDiagShell(cmd.Cmd):
             else:
                 args = arg.split(' ')
                 if self.project.loaddata(args[-1]):
-                    rur = self.project.remainingresource(os.path.abspath(arg))
+                    rur = self.project.remainingresource()
                     if True:
                         print(f'Остаточный ресурс {round(rur[-1][0] * 100, 1)}%')
                         if rur[-1][0] <= rur[0][0]:
@@ -136,7 +149,7 @@ class EDiagShell(cmd.Cmd):
             else:
                 print('Построение графика...')
                 plt.clf()
-                plt.plot(mes)
+                plt.plot(mes, '-')
                 plt.legend(['Остатончный ресурс'])
                 if arg:
                     img = f'{os.getcwd()}/{arg}.png'
