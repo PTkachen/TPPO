@@ -2,6 +2,8 @@ import os, math
 import numpy as np
 from nn import NN
 
+iii = 0
+
 class EDiag:
     name = ''
     files = []
@@ -21,7 +23,8 @@ class EDiag:
         else:
             print("Специальный файл (socket, FIFO, device file)" )
             return False
-
+        # сортировка файлов по имени (по дате в имени файла)
+        self.files.sort(reverse=False)
         return True
 
     #Метод подготовки данных для обчуния нейронной сети. В качестве параметров: self - путь для файлов с показаниями
@@ -35,6 +38,8 @@ class EDiag:
         for i, file in enumerate(self.files):
             FILE = np.genfromtxt(file, delimiter = '\t')
             vect_pr = self.markup(FILE)
+            vect_pr2 = vect_pr
+            vect_pr /= np.linalg.norm(vect_pr)
             nu = np.average(FILE[:, 0])
             x = np.var(FILE[:, 0])
             print(f'Загружен файл {i+1}/{N}', end = '\r')
@@ -42,12 +47,13 @@ class EDiag:
 
             # Определяем точку невозврата. Если точка найдена flag = 1
             # Пока точка не найдена, записываем во вспомогательный массив все значения
+            
+
+            if abs(vect_pr2[0] - nu) > 3 * x and flag == 0:
+                flag = 1
+            
             if flag == 0:
                 startPoint.append(vect_pr / np.linalg.norm(vect_pr))
-
-            if abs(vect_pr[0] - nu) > 2 * x and flag == 0:
-                flag = 1
-
 
             # Если точка невозврата найдена, записываем в основной массив только три значения - вопроса, для которых ответ будет 1 - эквивален 100% остаточного ресурса.
             # Изменяем значение flag = 2, последующие значения будем сразу записывать в основной массив вопросов
@@ -74,14 +80,14 @@ class EDiag:
         n.learn(np.array(tdata), np.array(tout))
         n.save('model')
         print(startPoint)
-        #return (np.array(tdata), np.array(tout))
+        return (np.array(tdata), np.array(tout))
 
     #Метод вычисления признаков для нейронной сети. В качестве параметров: FILE - файл с текущими показаниями, self - ссылка на самого себя. Возвращает вектор признаков.
     def markup(self, FILE):
         #FILE = np.genfromtxt(f'{self.path}/{file}', delimiter = '\t')
         n = len(FILE[:, 0])
         # x = np.var(FILE[:, 0])
-        x = numpy.mean(FILE[:,0])
+        x = np.mean(FILE[:,0])
         VARIANCE = 1 / n * sum((FILE[:, 0] - x) ** 2)
         RMS = math.sqrt(sum(FILE[:, 0] ** 2) / n)
         KURT = sum((FILE[:, 0] - x) ** 4 ) / (n * VARIANCE ** 2) - 3
@@ -97,7 +103,7 @@ class EDiag:
         n = len(FILE[:, 0])
         # x = np.var(FILE[:, 0])
         # x - среднее
-        x = numpy.mean(FILE[:,0])
+        x = np.mean(FILE[:,0])
         VARIANCE = 1 / n * sum((FILE[:, 0] - x) ** 2)
         RMS = math.sqrt(sum(FILE[:, 0] ** 2) / n)
         KURT = sum((FILE[:, 0] - x) ** 4 ) / (n * VARIANCE ** 2) - 3
@@ -115,7 +121,7 @@ class EDiag:
         for i, log in enumerate(self.files):
             print(f'Загружен файл {i+1}/{len(self.files)}', end = '\r')
             rur.append(n.predict([list(self.markupfrompathnorm(log))]))
-        print(f'Загружено {len(self.files)} файлов!            ')
+        print(f'Загружено {len(self.files)} файлов!')
         return rur
 
         #return n.predict([list(vect)])
@@ -161,7 +167,7 @@ class EDiag:
             if flag == 2:
                 tdata.append(vect_pr / np.linalg.norm(vect_pr))
                 tout.append(tout[-1] - (1 / (N - NTRUE - 1)))
-
+        print(f'startpoint len {len(startPoint)}')
         print('Предсказание')
         n = NN('model')
         return n.predict(np.array(tdata))
