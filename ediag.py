@@ -80,22 +80,7 @@ class EDiag:
     def markup(self, FILE):
         #FILE = np.genfromtxt(f'{self.path}/{file}', delimiter = '\t')
         n = len(FILE[:, 0])
-        x = np.var(FILE[:, 0])
-        VARIANCE = 1 / n * sum((FILE[:, 0] - x) ** 2)
-        RMS = math.sqrt(sum(FILE[:, 0] ** 2) / n)
-        KURT = sum((FILE[:, 0] - x) ** 4 ) / (n * VARIANCE ** 2) - 3
-        SF = RMS / ((sum(np.absolute(FILE[:, 0]))) / n)
-        PvT = max(np.absolute(FILE[:, 0]))
-        CF = PvT / RMS
-        vect = np.array([KURT, VARIANCE, RMS, SF, PvT, CF])
-        return vect / np.linalg.norm(vect)
-        #return vect
-
-    def markupfrompathnorm(self, file):
-        FILE = np.genfromtxt(file, delimiter = '\t')
-        n = len(FILE[:, 0])
-        x = np.var(FILE[:, 0])
-        //x - среднее
+        # x = np.var(FILE[:, 0])
         x = numpy.mean(FILE[:,0])
         VARIANCE = 1 / n * sum((FILE[:, 0] - x) ** 2)
         RMS = math.sqrt(sum(FILE[:, 0] ** 2) / n)
@@ -104,8 +89,24 @@ class EDiag:
         PvT = max(np.absolute(FILE[:, 0]))
         CF = PvT / RMS
         vect = np.array([KURT, VARIANCE, RMS, SF, PvT, CF])
-        return vect / np.linalg.norm(vect)
-        #return vect
+        #return vect / np.linalg.norm(vect)
+        return vect
+
+    def markupfrompathnorm(self, file):
+        FILE = np.genfromtxt(file, delimiter = '\t')
+        n = len(FILE[:, 0])
+        # x = np.var(FILE[:, 0])
+        # x - среднее
+        x = numpy.mean(FILE[:,0])
+        VARIANCE = 1 / n * sum((FILE[:, 0] - x) ** 2)
+        RMS = math.sqrt(sum(FILE[:, 0] ** 2) / n)
+        KURT = sum((FILE[:, 0] - x) ** 4 ) / (n * VARIANCE ** 2) - 3
+        SF = RMS / ((sum(np.absolute(FILE[:, 0]))) / n)
+        PvT = max(np.absolute(FILE[:, 0]))
+        CF = PvT / RMS
+        vect = np.array([KURT, VARIANCE, RMS, SF, PvT, CF])
+        #return vect / np.linalg.norm(vect)
+        return vect
 
     #Метод определения остаточного ресурса. На вход получает self - ссылку на самого себя, vect - вектор признаков. Возвращает численное значение остаточного ресурса
     def oldremainingresource(self, p):
@@ -129,6 +130,8 @@ class EDiag:
         for i, file in enumerate(self.files):
             FILE = np.genfromtxt(file, delimiter = '\t')
             vect_pr = self.markup(FILE)
+            vect_pr2 = vect_pr
+            vect_pr /= np.linalg.norm(vect_pr)
             nu = np.average(FILE[:, 0])
             x = np.var(FILE[:, 0])
             print(f'Загружен файл {i+1}/{N}', end = '\r')
@@ -136,7 +139,7 @@ class EDiag:
 
             # Определяем точку невозврата. Если точка найдена flag = 1
             # Пока точка не найдена, записываем во вспомогательный массив все значения
-            if abs(vect_pr[0] - nu) > 2 * x and flag == 0:
+            if abs(vect_pr2[0] - nu) > 2 * x and flag == 0:
                 flag = 1
 
             # Если точка невозврата найдена, записываем в основной массив только три значения - вопроса, для которых ответ будет 1 - эквивален 100% остаточного ресурса.
