@@ -1,7 +1,7 @@
 import mysql.connector, json, getpass, os
 import numpy as np
 
-
+# создание / обновление конфиг файла
 def createconfig():
     cfg = {}
     host = cfg['Host'] = input('host: ')
@@ -11,6 +11,8 @@ def createconfig():
     with open('db_config.json', 'w') as f:
         json.dump(cfg, f)
 
+        
+# проверка на правильность конфига        
 def configisvalid():
     if os.path.exists('db_config.json'):
         with open('db_config.json') as json_file:
@@ -29,6 +31,7 @@ def configisvalid():
     else:
         print('Конфиг пропал!')
 
+# загрузка конфига        
 def loadconfig():
     if os.path.exists('db_config.json'):
         while not configisvalid():
