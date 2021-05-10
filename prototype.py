@@ -17,22 +17,12 @@ from ediag import *
 import matplotlib.pyplot as plt
 from EDDB import *
 
-if os.path.exists('db_config.json'):
-    with open('db_config.json') as json_file:
-        db = json.load(json_file)
-else:
-    ans = input('Нет файла db_config.json!\nСоздать y/n?')
-    if ans == 'y':
-        db_config()
-        with open('db_config.json') as json_file:
-            db = json.load(json_file)
-    else:
-        print('No db_config')
-        quit(1)
+db = loadconfig()
 
 print('Подключение к базе данных')
-database = edDB()
-database.connectToDB(db['Host'], db['UserName'], db['Password'], db['DBName'])
+database = edDB(db['Host'], db['UserName'], db['Password'], db['DBName'])
+
+
 if not database.checkTableExists('Trend'):
     print(f'Таблица {db["DBName"]}.Trend не существует!\nСоздание...')
     database.CreateTrendTable()
@@ -40,13 +30,13 @@ if not database.checkTableExists('Trend'):
 if not database.checkTableExists('Projects'):
     print(f'Таблица {db["DBName"]}.Projects не существует!\nСоздание...')
     database.CreateProjectsTable()
-#else:
-    #database.quickFix()
 
 def printarray(arr):
     for i, a in enumerate(arr):
         print(f'{i+1}) {a}')
 
+
+###############################################################################################################
 class EDiagShell(cmd.Cmd):
     doc_header = 'Доступные команды, чтобы посмотреть описание команды используйте help <команда>'
     prompt = 'ediag> '
@@ -186,10 +176,9 @@ class EDiagShell(cmd.Cmd):
 
     def do_configdb(self, arg):
         db_config()
-        #database.CloseConnecton()
-        #print('Reconnecting...')
-        #database = edDB()
-        #database.connectToDB(db['Host'], db['UserName'], db['Password'], db['DBName'])
+        database.CloseConnecton()
+        print('Reconnecting...')
+        database.edDB(db['Host'], db['UserName'], db['Password'], db['DBName'])
 
 if __name__ == '__main__':
     EDiagShell().cmdloop()
