@@ -29,6 +29,7 @@ print('Загрузка TensorFlow...')
 from ediag import *
 import matplotlib.pyplot as plt
 from EDDB import *
+from scipy.signal import savgol_filter
 
 db = loadconfig()
 
@@ -98,6 +99,8 @@ class EDiagShell(cmd.Cmd):
                 self.project = EDiag(arg)
                 if database.dataexists(arg):
                     print(f'Остаточный ресурс: {round(database.get_lastrur(arg) * 100, 1)}%')
+                    if criticalresource(database.get_dots(arg)):
+                        print(f'{bcolors.WARNING}!ВНИМАНИЕ! НИЗКИЙ ОСТАТОЧНЫЙ РЕСУРС !ВНИМАНИЕ!{bcolors.ENDC}')
                 else:
                     print(f'В проекте {arg} нет данных!')
             else:
@@ -133,6 +136,8 @@ class EDiagShell(cmd.Cmd):
                         print(f'Запись в базу данных {database.dbname}!')
                         database.insert_dots([(self.project.name, str(r[0])) for r in rur])
                         database.update_project(self.project.name, rur[-1][0])
+                        if criticalresource(rur):
+                            print(f'{bcolors.WARNING}!ВНИМАНИЕ! НИЗКИЙ ОСТАТОЧНЫЙ РЕСУРС !ВНИМАНИЕ!{bcolors.ENDC}')
                         #print(f'{bcolors.WARNING}!ВНИМАНИЕ! РЕЗКОЕ ИЗМЕНЕНИЕ ТРЕНДА !ВНИМАНИЕ!{bcolors.ENDC}')
                         #print([r[0][0] for r in rur])
         else:
@@ -149,8 +154,14 @@ class EDiagShell(cmd.Cmd):
             else:
                 print('Построение графика...')
                 plt.clf()
-                plt.plot(mes, '-')
-                plt.legend(['Остатончный ресурс'])
+                if len(mes) >= 101:
+                    plt.plot(mes, '.')
+                    plt.plot(savgol_filter(mes, 101, 3))
+                    plt.legend(['Остатончный ресурс', 'График'])
+                else:
+                    plt.plot(mes, '-')
+                    plt.legend(['Остаточный ресурс'])
+
                 if arg:
                     img = f'{os.getcwd()}/{arg}.png'
                     plt.savefig(img, dpi = 300)
