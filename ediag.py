@@ -2,6 +2,12 @@ import os, math
 import numpy as np
 from nn import NN
 
+def criticalresource(rur):
+    for i in range(round(len(rur) * 0.05)):
+        if rur[len(rur) - 1 - i] < 0.1:
+            return True
+    return False
+
 class EDiag:
     name = ''
     files = []
