@@ -1,6 +1,7 @@
 import os, math
 import numpy as np
 from nn import NN
+from scipy.stats import norm, kurtosis
 
 def criticalresource(rur):
     for i in range(round(len(rur) * 0.05)):
@@ -97,29 +98,19 @@ class EDiag:
         #FILE = np.genfromtxt(f'{self.path}/{file}', delimiter = '\t')
         n = len(FILE[:, 0])
         x = np.mean(FILE[:, 0])
-        VARIANCE = 1 / n * sum((FILE[:, 0] - x) ** 2)
-        RMS = math.sqrt(sum(FILE[:, 0] ** 2) / n)
-        KURT = sum((FILE[:, 0] - x) ** 4 ) / (n * VARIANCE ** 2) - 3
+        VARIANCE = np.var(FILE[:,0])
+        RMS = np.sqrt(np.mean(np.square(FILE[:,0])))
+        KURT = kurtosis(FILE[:,0])
         SF = RMS / ((sum(np.absolute(FILE[:, 0]))) / n)
         PvT = max(np.absolute(FILE[:, 0]))
         CF = PvT / RMS
         vect = np.array([KURT, VARIANCE, RMS, SF, PvT, CF])
-        #return vect / np.linalg.norm(vect)
         return vect
 
     def markupfrompathnorm(self, file):
         FILE = np.genfromtxt(file, delimiter = '\t')
-        n = len(FILE[:, 0])
-        x = np.mean(FILE[:, 0])
-        VARIANCE = 1 / n * sum((FILE[:, 0] - x) ** 2)
-        RMS = math.sqrt(sum(FILE[:, 0] ** 2) / n)
-        KURT = sum((FILE[:, 0] - x) ** 4 ) / (n * VARIANCE ** 2) - 3
-        SF = RMS / ((sum(np.absolute(FILE[:, 0]))) / n)
-        PvT = max(np.absolute(FILE[:, 0]))
-        CF = PvT / RMS
-        vect = np.array([KURT, VARIANCE, RMS, SF, PvT, CF])
+        vect = self.markup(FILE)
         return vect / np.linalg.norm(vect)
-        #return vect
 
         #return n.predict([list(vect)])
     #Метод определения остаточного ресурса. На вход получает self - ссылку на самого себя, vect - вектор признаков. Возвращает численное значение остаточного ресурса
