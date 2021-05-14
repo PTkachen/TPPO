@@ -1,10 +1,9 @@
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import Dense, Dropout
 from tensorflow import keras
-from tensorflow.keras.callbacks import EarlyStopping
-from keras.layers import Dropout
+#from keras.layers import Dropout
 
 class NN:
     model = Sequential()
@@ -17,7 +16,7 @@ class NN:
     def learn(self, x, y):
         # x: np.array(n, 6), y: np.array(n)
         if len(x) != len(y):
-            print('error')
+            print('Arrays are not equal')
             return
 
         self.model.add(Dense(19, input_dim=6, activation='relu'))
@@ -31,11 +30,9 @@ class NN:
         #self.model.add(Dense(25, activation='tanh')) #
         #self.model.add(Dense(20, activation='selu')) #
         self.model.add(Dense(1, activation='sigmoid'))
-        es = EarlyStopping(monitor="val_accuracy", min_delta=0.01, patience=3)
-        callback = [es]
         self.model.compile(loss='binary_crossentropy',
                            optimizer='adam', metrics=['accuracy'])
-        self.model.fit(x, y, epochs=150, batch_size=10, verbose=1,callbacks=callback)
+        self.model.fit(x, y, epochs=150, batch_size=10, verbose=0)
 
     def predict(self, X):
         predictions = self.model.predict(X)
