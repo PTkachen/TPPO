@@ -2,6 +2,7 @@ import os, math
 import numpy as np
 from nn import NN
 from scipy.stats import norm, kurtosis
+import matplotlib.pyplot as plt
 
 def criticalresource(rur):
     for i in range(round(len(rur) * 0.05)):
@@ -33,7 +34,7 @@ class EDiag:
         return True
 
     #Метод подготовки данных для обчуния нейронной сети. В качестве параметров: self - путь для файлов с показаниями
-    def preparation(self):
+    def oldpreparation(self):
         NTRUE = 0 # Номер последнего файла до точки невозврата
         N = len(self.files)
         flag = 0 # Флаг для определения этапа обучения нейронной сети
@@ -76,7 +77,7 @@ class EDiag:
                 for i in range(3):
                     tout.append(1)
 
-            # Записываем вопросы и ответы после точки невозврата
+            # Записываем вопросы и ответы после точки невозвратаfor i, file im
             if flag == 2:
                 tdata.append(vect_pr / np.linalg.norm(vect_pr))
                 tout.append(tout[-1] - (1 / (N - NTRUE - 1)))
@@ -93,23 +94,59 @@ class EDiag:
         #print(startPoint)
         #return (np.array(tdata), np.array(tout), x2, nur)
 
+    def preparation(self):
+        data = []
+        num = int(input('По номеру какого подшипника/сенсора строить?\n: '))
+        for i, file in enumerate(self.files):
+            FILE = np.genfromtxt(file, delimiter = '\t')
+            data.append(self.markup(FILE, num))
+            print(f'Загружен файл {i+1}/{len(self.files)}', end = '\r')
+        print(f'Загржуно {len(self.files)} файлов!           ')
+
+        plt.plot(data)
+        plt.legend(['KURT', 'VARIANCE', 'RMS', 'SF', 'PvT', 'CF'])
+        plt.savefig('reference.png', dpi = 300)
+        print(f'График построен!\nfile://{os.path.abspath("reference.png")}')
+        data = np.array([v / np.linalg.norm(v) for v in data])
+        g1 = input('Хорошо до: ')
+        s1 = input('Начало: ')
+        s2 = input(' Конец: ')
+        s3 = input('Начало: ')
+        s4 = input(' Конец: ')
+        well = [data[0], data[int((int(s1) - int(g1)) / 2)], data[int(g1)]]
+        tdata =  np.concatenate((well, data[int(s1):int(s2)], data[int(s3):int(s4)]))
+        tout = np.concatenate((np.full(3, 1.0), np.linspace(1, 0, len(tdata) - 3)))
+        #print(tdata)
+        #print(tout)
+        print('Обучение...')
+        print(f'Кол-во точек для обучения: {len(tdata)}')
+        n = NN()
+        n.learn(tdata, tout)
+        x = input('Сохранить старую модель? y/n ')
+        if x == 'y':
+            os.rename('model', 'model_bc')
+            print('backup')
+        n.save('model')
+
+
+
     #Метод вычисления признаков для нейронной сети. В качестве параметров: FILE - файл с текущими показаниями, self - ссылка на самого себя. Возвращает вектор признаков.
-    def markup(self, FILE):
+    def markup(self, FILE, b):
         #FILE = np.genfromtxt(f'{self.path}/{file}', delimiter = '\t')
-        n = len(FILE[:, 0])
-        x = np.mean(FILE[:, 0])
-        VARIANCE = np.var(FILE[:,0])
-        RMS = np.sqrt(np.mean(np.square(FILE[:,0])))
-        KURT = kurtosis(FILE[:,0])
-        SF = RMS / ((sum(np.absolute(FILE[:, 0]))) / n)
-        PvT = max(np.absolute(FILE[:, 0]))
+        n = len(FILE[:, b])
+        x = np.mean(FILE[:, b])
+        VARIANCE = np.var(FILE[:,b])
+        RMS = np.sqrt(np.mean(np.square(FILE[:,b])))
+        KURT = kurtosis(FILE[:,b])
+        SF = RMS / ((sum(np.absolute(FILE[:, b]))) / n)
+        PvT = max(np.absolute(FILE[:, b]))
         CF = PvT / RMS
         vect = np.array([KURT, VARIANCE, RMS, SF, PvT, CF])
         return vect
 
-    def markupfrompathnorm(self, file):
+    def markupfrompathnorm(self, file, b):
         FILE = np.genfromtxt(file, delimiter = '\t')
-        vect = self.markup(FILE)
+        vect = self.markup(FILE, b)
         return vect / np.linalg.norm(vect)
 
         #return n.predict([list(vect)])
@@ -118,7 +155,7 @@ class EDiag:
         n = NN('model')
         pdata = []
         for i, file in enumerate(self.files):
-            pdata.append(self.markupfrompathnorm(file))
+            pdata.append(self.markupfrompathnorm(file, 0))
             print(f'Загружен файл {i+1}/{len(self.files)}', end = '\r')
         print(f'Загружено {len(self.files)} файлов!            ')
         return n.predict(np.array(pdata))
