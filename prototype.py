@@ -10,6 +10,12 @@ class bcolors:
     ENDC = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
+
+colors = [bcolors.HEADER,
+          bcolors.OKGREEN,
+          bcolors.OKCYAN,
+          bcolors.WARNING,
+          bcolors.OKBLUE]
 art = r'''                   _                            _
                   (_)                          | |
    ___  __ _ _   _ _ _ __  _ __ ___   ___ _ __ | |_
@@ -49,7 +55,7 @@ def printarray(arr):
     for i, a in enumerate(arr):
         print(f'{i+1}) {a}')
 
-
+import random
 ###############################################################################################################
 class EDiagShell(cmd.Cmd):
     doc_header = 'Доступные команды, чтобы посмотреть описание команды используйте help <команда>'
@@ -57,7 +63,8 @@ class EDiagShell(cmd.Cmd):
     project = None
     username = getpass.getuser()
     listp = database.SelectProjectsTable()
-    intro = art + f'\nДобро пожаловать в equipmentdiagnostics {username}!'
+    intro = colors[random.randint(0, random.randint(0, len(colors) - 1))] + art + bcolors.ENDC + f'\nДобро пожаловать в equipmentdiagnostics {username}!'
+    lastmes = 0
 
     def do_quit(self, arg):
         'завершить equipmentdiagnostics'
@@ -132,12 +139,12 @@ class EDiagShell(cmd.Cmd):
                             print('Подшипник изнашивается')
                         else:
                             print('Подшипник обкатывается')
-
+                        self.lastmes = len(rur)
                         print(f'Запись в базу данных {database.dbname}!')
                         database.insert_dots([(self.project.name, str(r[0])) for r in rur])
                         database.update_project(self.project.name, rur[-1][0])
                         if criticalresource(rur):
-                            print(f'{bcolors.WARNING}!ВНИМАНИЕ! НИЗКИЙ ОСТАТОЧНЫЙ РЕСУРС !ВНИМАНИЕ!{bcolors.ENDC}')
+                            print(f'{bcolors.WARNING}!ВНИМАНИЕ! НИЗКИЙ ОСТАТОЧНЫЙ РЕСУРС !ВНИМАНИЕ!{bcolors.WARNING}')
                         #print(f'{bcolors.WARNING}!ВНИМАНИЕ! РЕЗКОЕ ИЗМЕНЕНИЕ ТРЕНДА !ВНИМАНИЕ!{bcolors.ENDC}')
                         #print([r[0][0] for r in rur])
         else:
@@ -162,14 +169,17 @@ class EDiagShell(cmd.Cmd):
                     plt.plot(mes, '-')
                     plt.legend(['Остаточный ресурс'])
 
+                if self.lastmes > 0 and len(mes) > self.lastmes:
+                    plt.axvline(x=(len(mes) - self.lastmes))
+
                 if arg:
                     img = f'{os.getcwd()}/{arg}.png'
                     plt.savefig(img, dpi = 300)
-                    print(f'График стренда построен!\nfile://{img}')
+                    print(f'График тренда построен!\nfile://{img}')
                 else:
                     img = f'{os.getcwd()}/{datetime.date.today()}.png'
                     plt.savefig(img, dpi = 300)
-                    print(f'График стренда построен!\nfile://{img}')
+                    print(f'График тренда построен!\nfile://{img}')
 
     def do_removep(self, arg):
         'Удалить проект'
@@ -193,8 +203,23 @@ class EDiagShell(cmd.Cmd):
             if self.project == None:
                 print('Вы не в проекте')
             else:
-                if self.project.loaddata(arg):
-                    self.project.preparation()
+                if arg == '-r' or arg == '--restore':
+                    if os.path.exists('model_bc'):
+                        x = input('Точно? y/n ')
+                        if x == 'y':
+                            print('Восстановление')
+                            if os.path.exists('model'):
+                                os.rmdir('model')
+                            os.rename('model_bc', 'model')
+                    else:
+                        print('Нет')
+
+                else:
+                    print(f'{bcolors.WARNING}!ВНИМАНИЕ! для обучения нобходима возможность посмотреть график !ВНИМАНИЕ!{bcolors.ENDC}')
+                    x = input('Продолжить? y/n ')
+                    if x == 'y':
+                        if self.project.loaddata(arg):
+                            self.project.preparation()
         else:
             print('Укажите путь!')
 
