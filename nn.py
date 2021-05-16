@@ -11,12 +11,12 @@ class NN:
     def __init__(self, path=''):
         if path:
             self.model = keras.models.load_model(path)
-            print(f'loaded model {path}')
+            print(f'NN debug: loaded model {path}')
 
     def learn(self, x, y):
         # x: np.array(n, 6), y: np.array(n)
         if len(x) != len(y):
-            print('Arrays are not equal')
+            print(f'NN error: Arrays are not equal\n{len(x)}\n{len(y)}')
             return
 
         self.model.add(Dense(19, input_dim=6, activation='relu'))
