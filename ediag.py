@@ -8,15 +8,20 @@ def criticalresource(rur):
     for i in range(round(len(rur) * 0.05)):
         if rur[len(rur) - 1 - i] < 0.1:
             return True
-    return False
+    return False 
+
 
 class EDiag:
     name = ''
     files = []
     path = ''
     Vector = []
-    def __init__(self, p):
+    bearings = 0
+    sensors = 0
+    def __init__(self, p, b, s):
         self.name = p
+        self.bearings = b
+        self.sensors = s
         #load db data
         #load Vector from DB
     #Метод загрузки данных. На вход принимает self - ссылку на самого себя, р - путь до файла
@@ -32,6 +37,19 @@ class EDiag:
             return False
 
         return True
+
+    def checkdata(self):
+        if len(self.files) == 0:
+            print('Нечего проверять')
+            return False
+        file = self.files[0]
+        #print(file)
+        line = np.genfromtxt(file, delimiter = '\t')[0]
+
+        if len(line) < int(self.bearings * self.sensors):
+            return False
+        else:
+            return True
 
     #Метод подготовки данных для обчуния нейронной сети. В качестве параметров: self - путь для файлов с показаниями
     def oldpreparation(self):
@@ -96,7 +114,7 @@ class EDiag:
 
     def preparation(self):
         data = []
-        num = int(input('По номеру какого подшипника/сенсора строить?\n: '))
+        num = int(input('По номеру какого подшипника/сенсора строить?\n: ')) - 1
         for i, file in enumerate(self.files):
             FILE = np.genfromtxt(file, delimiter = '\t')
             data.append(self.markup(FILE, num))
@@ -152,11 +170,15 @@ class EDiag:
 
         #return n.predict([list(vect)])
     #Метод определения остаточного ресурса. На вход получает self - ссылку на самого себя, vect - вектор признаков. Возвращает численное значение остаточного ресурса
-    def remainingresource(self):
+    def remainingresource(self, num = 0):
         n = NN('model')
+
+        if not self.checkdata():
+            return None
+
         pdata = []
         for i, file in enumerate(self.files):
-            pdata.append(self.markupfrompathnorm(file, 0))
+            pdata.append(self.markupfrompathnorm(file, num))
             print(f'Загружен файл {i+1}/{len(self.files)}', end = '\r')
         print(f'Загружено {len(self.files)} файлов!            ')
         return n.predict(np.array(pdata))
