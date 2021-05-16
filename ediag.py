@@ -110,11 +110,12 @@ class EDiag:
         data = np.array([v / np.linalg.norm(v) for v in data])
         g1 = input('Хорошо до: ')
         s1 = input('Начало: ')
-        s2 = input(' Конец: ')
-        s3 = input('Начало: ')
-        s4 = input(' Конец: ')
-        well = [data[0], data[int((int(s1) - int(g1)) / 2)], data[int(g1)]]
-        tdata =  np.concatenate((well, data[int(s1):int(s2)], data[int(s3):int(s4)]))
+        #s2 = input(' Конец: ')
+        #s3 = input('Начало: ')
+        #s4 = input(' Конец: ')
+        well = [data[int((int(s1) - int(g1)) / 2)], data[int((int(s1) - int(g1)) / 2)], data[int(g1)]]
+        #tdata =  np.concatenate((well, data[int(s1):int(s2)], data[int(s3):int(s4)], [data[-1]]))
+        tdata = np.concatenate((well, data[int(s1):]))
         tout = np.concatenate((np.full(3, 1.0), np.linspace(1, 0, len(tdata) - 3)))
         #print(tdata)
         #print(tout)
