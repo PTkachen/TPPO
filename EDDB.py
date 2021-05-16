@@ -32,7 +32,7 @@ def configisvalid():
 def loadconfig():
     if os.path.exists('db_config.json'):
         while not configisvalid():
-            x = input('Ошибка конфига!\nИсправить? y/n')
+            x = input('Ошибка конфига!\nИсправить? y/n ')
             if x == 'y':
                 createconfig()
             else:
@@ -41,7 +41,7 @@ def loadconfig():
             db = json.load(json_file)
             return db
     else:
-        a = input('Файл db_config не найден!\nСоздать? y/n')
+        a = input('Файл db_config не найден!\nСоздать? y/n ')
         createconfig()
         return loadconfig()
 
@@ -186,10 +186,10 @@ class edDB:
         return float(self.cursor.fetchone()[0])
 
     def get_Project_stats(self, projname):
-        query = "SELECT BEARINGSCOUNT,SENSORSCOUNT FROM Trend WHERE PROJNAME = %s"
+        query = "SELECT BEARINGSCOUNT,SENSORSCOUNT FROM Projects WHERE PROJNAME = %s"
 
         self.cursor.execute(query, (projname,))
 
         dots = self.cursor.fetchall()
 
-        self.connection.commit()
+        return dots[0]
