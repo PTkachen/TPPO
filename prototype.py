@@ -80,8 +80,10 @@ class EDiagShell(cmd.Cmd):
             if arg in self.listp:
                 print(f'{arg} уже существует!')
             else:
+                bearings = int(input('Кол-во подшипников: '))
+                sensors = int(input('Кол-во сенсоров на один подшипник: '))
                 #self.listp.append(arg)
-                database.insert_project_stats(arg, 1, 1, '1.0')
+                database.insert_project_stats(arg, bearings, sensors, '1.0')
                 self.listp = database.SelectProjectsTable()
                 print(f'Создан проект {arg}!')
         else:
@@ -102,8 +104,10 @@ class EDiagShell(cmd.Cmd):
         'Загрузить проект'
         if arg:
             if arg in self.listp:
+                b, s = database.get_Project_stats(arg)
                 self.prompt = f'{arg}@ediag> '
-                self.project = EDiag(arg)
+                self.project = EDiag(arg, b, s)
+                print(f'Подшипников: {b}\nСенсоров: {s}')
                 if database.dataexists(arg):
                     print(f'Остаточный ресурс: {round(database.get_lastrur(arg) * 100, 1)}%')
                     if criticalresource(database.get_dots(arg)):
@@ -132,21 +136,28 @@ class EDiagShell(cmd.Cmd):
             else:
                 args = arg.split(' ')
                 if self.project.loaddata(args[-1]):
-                    rur = self.project.remainingresource()
-                    if True:
-                        print(f'Остаточный ресурс {round(rur[-1][0] * 100, 1)}%')
-                        if rur[-1][0] <= rur[0][0]:
-                            print('Подшипник изнашивается')
-                        else:
-                            print('Подшипник обкатывается')
-                        self.lastmes = len(rur)
-                        print(f'Запись в базу данных {database.dbname}!')
-                        database.insert_dots([(self.project.name, str(r[0])) for r in rur])
-                        database.update_project(self.project.name, rur[-1][0])
-                        if criticalresource(rur):
-                            print(f'{bcolors.WARNING}!ВНИМАНИЕ! НИЗКИЙ ОСТАТОЧНЫЙ РЕСУРС !ВНИМАНИЕ!{bcolors.ENDC}')
-                        #print(f'{bcolors.WARNING}!ВНИМАНИЕ! РЕЗКОЕ ИЗМЕНЕНИЕ ТРЕНДА !ВНИМАНИЕ!{bcolors.ENDC}')
-                        #print([r[0][0] for r in rur])
+                    if not self.project.checkdata():
+                        print('Данные не соответствуют')
+                    else:
+                        num = int(input(f'По номеру какого подшипника строить 1:{self.project.bearings}?: ')) -1
+                        rur = self.project.remainingresource(int(num * self.project.sensors))
+                        if any(rur):
+                            if rur[-1][0] <= rur[0][0]:
+                                print('Подшипник изнашивается')
+                            else:
+                                print('Подшипник обкатывается')
+                            flag = criticalresource(rur)
+                            #print(f'hello{avg}')
+                            print(f'Остаточный ресурс {round(min(rur[:,0]) * 100, 1)}%')
+                            if flag:
+                                print(f'{bcolors.WARNING}!ВНИМАНИЕ! НИЗКИЙ ОСТАТОЧНЫЙ РЕСУРС !ВНИМАНИЕ!{bcolors.ENDC}')
+
+                            self.lastmes = len(rur)
+                            print(f'Запись в базу данных {database.dbname}!')
+                            database.insert_dots([(self.project.name, str(r[0])) for r in rur])
+                            database.update_project(self.project.name, min(rur[:,0]))
+                            #print(f'{bcolors.WARNING}!ВНИМАНИЕ! РЕЗКОЕ ИЗМЕНЕНИЕ ТРЕНДА !ВНИМАНИЕ!{bcolors.ENDC}')
+                            #print([r[0][0] for r in rur])
         else:
             print('Укажите путь!')
 
