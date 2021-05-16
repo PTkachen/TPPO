@@ -144,7 +144,7 @@ class EDiagShell(cmd.Cmd):
                         database.insert_dots([(self.project.name, str(r[0])) for r in rur])
                         database.update_project(self.project.name, rur[-1][0])
                         if criticalresource(rur):
-                            print(f'{bcolors.WARNING}!ВНИМАНИЕ! НИЗКИЙ ОСТАТОЧНЫЙ РЕСУРС !ВНИМАНИЕ!{bcolors.WARNING}')
+                            print(f'{bcolors.WARNING}!ВНИМАНИЕ! НИЗКИЙ ОСТАТОЧНЫЙ РЕСУРС !ВНИМАНИЕ!{bcolors.ENDC}')
                         #print(f'{bcolors.WARNING}!ВНИМАНИЕ! РЕЗКОЕ ИЗМЕНЕНИЕ ТРЕНДА !ВНИМАНИЕ!{bcolors.ENDC}')
                         #print([r[0][0] for r in rur])
         else:
