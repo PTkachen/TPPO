@@ -1,6 +1,6 @@
 import os, math
 import numpy as np
-from nn import NN
+from equipmentdiagnostics.nn.nn import NN
 from scipy.stats import norm, kurtosis
 import matplotlib.pyplot as plt
 from detect_delimiter import detect
