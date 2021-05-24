@@ -147,6 +147,7 @@ class edDB:
         BEARINGSCOUNT INT,
         SENSORSCOUNT INT,
         RUR char(16),
+        Trend char(16),
         PRIMARY KEY (ID)
         )'''
         self.cursor.execute(sql)
@@ -155,10 +156,10 @@ class edDB:
         self.cursor.execute("SELECT PROJNAME FROM Projects")
         return [x[0] for x in self.cursor.fetchall()]
 
-    def insert_project_stats(self, name, bear, sens, rur):
-        query = "INSERT INTO Projects(PROJNAME,BEARINGSCOUNT,SENSORSCOUNT, RUR) VALUES(%s,%s,%s,%s)"
+    def insert_project_stats(self, name, bear, sens, rur, Trend):
+        query = "INSERT INTO Projects(PROJNAME,BEARINGSCOUNT,SENSORSCOUNT, RUR, Trend) VALUES(%s,%s,%s,%s,%s)"
 
-        self.cursor.execute(query, (name, bear, sens, rur))
+        self.cursor.execute(query, (name, bear, sens, rur, str(Trend)))
 
         self.connection.commit()
 
@@ -177,11 +178,20 @@ class edDB:
 
     def update_project(self, name, rur):
         self.cursor.execute(f'UPDATE Projects SET RUR = %s WHERE PROJNAME = %s',
-        (str(rur), name))
+        (str(rur),name))
+        self.connection.commit()
+    def update_projectTrend(self, name, tr):
+        self.cursor.execute(f'UPDATE Projects SET Trend = %s WHERE PROJNAME = %s',
+        (str(round(tr, 8)),name))
         self.connection.commit()
 
     def get_lastrur(self, name):
         self.cursor.execute('SELECT RUR FROM Projects WHERE PROJNAME = %s',
+        (name,))
+        return float(self.cursor.fetchone()[0])
+
+    def get_lasttrend(self, name):
+        self.cursor.execute('SELECT Trend FROM Projects WHERE PROJNAME = %s',
         (name,))
         return float(self.cursor.fetchone()[0])
 
