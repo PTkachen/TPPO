@@ -1,6 +1,10 @@
 #!/usr/bin/python3
 
 import cmd, sys, getpass, datetime, os, json#, dbClass
+
+if not os.path.dirname(os.path.split(sys.path[0])[0]) in sys.path:
+	sys.path.append(os.path.split(sys.path[0])[0])
+
 print('Загрузка TensorFlow...')
 from equipmentdiagnostics.ediag.ediag import *
 import matplotlib.pyplot as plt
