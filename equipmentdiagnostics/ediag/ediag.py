@@ -1,14 +1,41 @@
 import os, math
 import numpy as np
-from equipmentdiagnostics.nn.nn import NN
+from nn import NN
 from scipy.stats import norm, kurtosis
 import matplotlib.pyplot as plt
+from detect_delimiter import detect
 
 def criticalresource(rur):
     for i in range(round(len(rur) * 0.05)):
         if rur[len(rur) - 1 - i] < 0.1:
             return True
-    return False 
+    return False
+
+def bulildTrend(rur):
+    h = (rur[-1] - rur[round(len(rur) * 0.95)]) / round(len(rur) * 0.05)
+    trend = [rur[-1]]
+    count = 0
+    if h == 0:
+        print('аа че делать')
+
+    if h < 0:
+        while trend[-1] > 0.0:
+            trend.append(trend[-1] + h)
+            count+=1
+
+    if h > 0:
+        while trend[-1] < 1.0:
+            trend.append(trend[-1] + h)
+            count+=1
+
+    return trend, count, h
+
+def getdelimiter(file):
+    f = open(file)
+    line = f.readline()
+    f.close()
+    delimiter = detect(line)
+    return delimiter
 
 
 class EDiag:
@@ -42,11 +69,20 @@ class EDiag:
         if len(self.files) == 0:
             print('Нечего проверять')
             return False
-        file = self.files[0]
-        #print(file)
-        line = np.genfromtxt(file, delimiter = '\t')[0]
 
-        if len(line) < int(self.bearings * self.sensors):
+        if self.sensors * self.bearings == 1:
+            return True
+        file = self.files[0]
+        f = open(file)
+        line = f.readline()
+        f.close()
+        delimiter = detect(line)
+        if not delimiter:
+            return False
+        #print(file)
+        #line = np.genfromtxt(file, delimiter = '\t')[0]
+
+        if len(line.split(delimiter)) < int(self.bearings * self.sensors):
             return False
         else:
             return True
@@ -116,9 +152,11 @@ class EDiag:
         data = []
         num = int(input('По номеру какого подшипника/сенсора строить?\n: ')) - 1
         for i, file in enumerate(self.files):
-            FILE = np.genfromtxt(file, delimiter = '\t')
-            data.append(self.markup(FILE, num))
-            print(f'Загружен файл {i+1}/{len(self.files)}', end = '\r')
+            delim = getdelimiter(file)
+            if delim:
+                FILE = np.genfromtxt(file, delimiter = delim)
+                data.append(self.markup(FILE, num))
+                print(f'Загружен файл {i+1}/{len(self.files)}', end = '\r')
         print(f'Загржуно {len(self.files)} файлов!           ')
 
         plt.plot(data)
@@ -164,10 +202,21 @@ class EDiag:
         return vect
 
     def markupfrompathnorm(self, file, b):
-        FILE = np.genfromtxt(file, delimiter = '\t')
-        vect = self.markup(FILE, b)
-        return vect / np.linalg.norm(vect)
-
+        deli = getdelimiter(file)
+        if self.sensors * self.bearings == 1:
+            deli = ' '
+        if deli:
+            if self.sensors * self.bearings > 1:
+                FILE = np.genfromtxt(file, delimiter = deli)
+                vect = self.markup(FILE, b)
+                return vect / np.linalg.norm(vect)
+            else:
+                FILE = np.array([[m] for m in np.genfromtxt(file, delimiter = deli)])
+                vect = self.markup(FILE, b)
+                return vect / np.linalg.norm(vect)
+        else:
+            print('No delimiter!')
+            return None
         #return n.predict([list(vect)])
     #Метод определения остаточного ресурса. На вход получает self - ссылку на самого себя, vect - вектор признаков. Возвращает численное значение остаточного ресурса
     def remainingresource(self, num = 0):
