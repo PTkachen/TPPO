@@ -2,10 +2,9 @@
 
 import cmd, sys, getpass, datetime, os, json#, dbClass
 print('Загрузка TensorFlow...')
-from equipmentdiagnostics.ediag.ediag import *
-#from ediag.ediag import *
+from ediag import *
 import matplotlib.pyplot as plt
-from equipmentdiagnostics.EDDB.EDDB import *
+from EDDB import *
 from scipy.signal import savgol_filter
 
 def main():
@@ -26,18 +25,18 @@ def main():
               bcolors.WARNING,
               bcolors.OKBLUE]
     art = r'''                   _                            _
-                      (_)                          | |
-       ___  __ _ _   _ _ _ __  _ __ ___   ___ _ __ | |_
-      / _ \/ _` | | | | | '_ \| '_ ` _ \ / _ \ '_ \| __|
-     |  __/ (_| | |_| | | |_) | | | | | |  __/ | | | |_
-      \___|\__, |\__,_|_| .__/|_| |_| |_|\___|_| |_|\__|
-         | (_)| |       | |              | | (_)
-       __| |_ |_| _  __ |_| __   ___  ___| |_ _  ___ ___
-      / _` | |/ _` |/ _` | '_ \ / _ \/ __| __| |/ __/ __|
-     | (_| | | (_| | (_| | | | | (_) \__ \ |_| | (__\__ \
-      \__,_|_|\__,_|\__, |_| |_|\___/|___/\__|_|\___|___/
-                     __/ |
-                    |___/                                '''
+                  (_)                          | |
+   ___  __ _ _   _ _ _ __  _ __ ___   ___ _ __ | |_
+  / _ \/ _` | | | | | '_ \| '_ ` _ \ / _ \ '_ \| __|
+ |  __/ (_| | |_| | | |_) | | | | | |  __/ | | | |_
+  \___|\__, |\__,_|_| .__/|_| |_| |_|\___|_| |_|\__|
+     | (_)| |       | |              | | (_)
+   __| |_ |_| _  __ |_| __   ___  ___| |_ _  ___ ___
+  / _` | |/ _` |/ _` | '_ \ / _ \/ __| __| |/ __/ __|
+ | (_| | | (_| | (_| | | | | (_) \__ \ |_| | (__\__ \
+  \__,_|_|\__,_|\__, |_| |_|\___/|___/\__|_|\___|___/
+                 __/ |
+                |___/                                '''
 
     db = loadconfig()
 
@@ -66,7 +65,6 @@ def main():
         username = getpass.getuser()
         listp = database.SelectProjectsTable()
         intro = colors[random.randint(0, random.randint(0, len(colors) - 1))] + art + bcolors.ENDC + f'\nДобро пожаловать в equipmentdiagnostics {username}!'
-        lastmes = 0
 
         def do_quit(self, arg):
             'завершить equipmentdiagnostics'
@@ -85,7 +83,7 @@ def main():
                     bearings = int(input('Кол-во подшипников: '))
                     sensors = int(input('Кол-во сенсоров на один подшипник: '))
                     #self.listp.append(arg)
-                    database.insert_project_stats(arg, bearings, sensors, '1.0')
+                    database.insert_project_stats(arg, bearings, sensors, '1.0', '0.0')
                     self.listp = database.SelectProjectsTable()
                     print(f'Создан проект {arg}!')
             else:
@@ -112,6 +110,7 @@ def main():
                     print(f'Подшипников: {b}\nСенсоров: {s}')
                     if database.dataexists(arg):
                         print(f'Остаточный ресурс: {round(database.get_lastrur(arg) * 100, 1)}%')
+                        print(f'Trend: {database.get_lasttrend(arg)}')
                         if criticalresource(database.get_dots(arg)):
                             print(f'{bcolors.WARNING}!ВНИМАНИЕ! НИЗКИЙ ОСТАТОЧНЫЙ РЕСУРС !ВНИМАНИЕ!{bcolors.ENDC}')
                     else:
@@ -141,23 +140,30 @@ def main():
                         if not self.project.checkdata():
                             print('Данные не соответствуют')
                         else:
-                            num = int(input(f'По номеру какого подшипника строить 1:{self.project.bearings}?: ')) -1
-                            rur = self.project.remainingresource(int(num * self.project.sensors))
+                            if self.project.bearings * self.project.sensors > 1:
+                                num = int(input(f'По номеру какого канала строить 1:{self.project.bearings * self.project.sensors}?: ')) -1
+                            else:
+                                num = 0
+                            rur = self.project.remainingresource(int(num))
                             if any(rur):
                                 if rur[-1][0] <= rur[0][0]:
                                     print('Подшипник изнашивается')
                                 else:
                                     print('Подшипник обкатывается')
                                 flag = criticalresource(rur)
+                                if len(rur) >= 101:
+                                    rur2 = savgol_filter(rur[:,0], 101, 3)
+                                else:
+                                    rur2 = rur[:,0]
                                 #print(f'hello{avg}')
-                                print(f'Остаточный ресурс {round(min(rur[:,0]) * 100, 1)}%')
+                                print(f'Остаточный ресурс {round(rur2[-1] * 100, 1)}%')
                                 if flag:
                                     print(f'{bcolors.WARNING}!ВНИМАНИЕ! НИЗКИЙ ОСТАТОЧНЫЙ РЕСУРС !ВНИМАНИЕ!{bcolors.ENDC}')
 
                                 self.lastmes = len(rur)
                                 print(f'Запись в базу данных {database.dbname}!')
                                 database.insert_dots([(self.project.name, str(r[0])) for r in rur])
-                                database.update_project(self.project.name, min(rur[:,0]))
+                                database.update_project(self.project.name, rur2[-1])
                                 #print(f'{bcolors.WARNING}!ВНИМАНИЕ! РЕЗКОЕ ИЗМЕНЕНИЕ ТРЕНДА !ВНИМАНИЕ!{bcolors.ENDC}')
                                 #print([r[0][0] for r in rur])
             else:
@@ -165,10 +171,12 @@ def main():
 
         def do_trend(self, arg):
             'Постоение графика тренда'
+            lastmes = 0
             if self.project == None:
                 print('Вы не в проекте')
             else:
                 mes = np.array(database.get_dots(self.project.name))
+                lastmes = len(mes)
                 if len(mes) <= 0:
                     print('Нет данных для построения')
                 else:
@@ -176,14 +184,24 @@ def main():
                     plt.clf()
                     if len(mes) >= 101:
                         plt.plot(mes, '.')
-                        plt.plot(savgol_filter(mes, 101, 3))
+                        smooth = savgol_filter(mes, 101, 3)
+                        t, c, h = bulildTrend(smooth)
+                        print(f'Trend:{h}')
+                        database.update_projectTrend(self.project.name, h)
+                        if c > 0 and h < 0:
+                            plt.plot(np.concatenate((smooth, t)))
+                            print(f'Readings remaining: {c}')
+                        else:
+                            plt.plot(smooth)
+
                         plt.legend(['Остатончный ресурс', 'График'])
                     else:
                         plt.plot(mes, '-')
                         plt.legend(['Остаточный ресурс'])
+                        print('not enough points!')
 
-                    if self.lastmes > 0 and len(mes) > self.lastmes:
-                        plt.axvline(x=(len(mes) - self.lastmes))
+                    if lastmes > 0:
+                        plt.axvline(x=(lastmes), color='r')
 
                     if arg:
                         img = f'{os.getcwd()}/{arg}.png'
@@ -244,6 +262,6 @@ def main():
 
 
     EDiagShell().cmdloop()
-    
+
 if __name__ == '__main__':
     main()
