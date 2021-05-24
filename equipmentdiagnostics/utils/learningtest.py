@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 
-from ediag import EDiag
+from equipmentdiagnostics.ediag.ediag import EDiag
 import sys
 import numpy as np
-from nn import NN
+from equipmentdiagnostics.ediag.nn import NN
 import matplotlib.pyplot as plt
 
 app = EDiag('bearing1')

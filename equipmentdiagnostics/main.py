@@ -2,9 +2,10 @@
 
 import cmd, sys, getpass, datetime, os, json#, dbClass
 print('Загрузка TensorFlow...')
-from ediag import *
+from equipmentdiagnostics.ediag.ediag import *
+#from ediag.ediag import *
 import matplotlib.pyplot as plt
-from EDDB import *
+from equipmentdiagnostics.EDDB.EDDB import *
 from scipy.signal import savgol_filter
 
 def main():
