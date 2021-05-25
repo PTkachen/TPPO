@@ -84,8 +84,14 @@ def main():
                 if arg in self.listp:
                     print(f'{arg} уже существует!')
                 else:
-                    bearings = int(input('Кол-во подшипников: '))
-                    sensors = int(input('Кол-во сенсоров на один подшипник: '))
+                    b = input('Кол-во подшипников: ')
+                    s = input('Кол-во сенсоров на один подшипник: ')
+                    try:
+                        bearings = int(b)
+                        sensors = int(s)
+                    except ValueError:
+                        print("Введены не числа!")
+                        return
                     #self.listp.append(arg)
                     database.insert_project_stats(arg, bearings, sensors, '1.0', '0.0')
                     self.listp = database.SelectProjectsTable()
@@ -145,7 +151,15 @@ def main():
                             print('Данные не соответствуют')
                         else:
                             if self.project.bearings * self.project.sensors > 1:
-                                num = int(input(f'По номеру какого канала строить 1:{self.project.bearings * self.project.sensors}?: ')) -1
+                                num = input(f'По номеру какого канала строить 1:{self.project.bearings * self.project.sensors}?: ')
+                                try:
+                                    num = int(num)-1
+                                except ValueError:
+                                    print('Введено не число')
+                                    return
+                                if num < 0 or num > self.project.bearings * self.project.sensors -1:
+                                    print('Попытка указать на несуществующий поток')
+                                    return
                             else:
                                 num = 0
                             rur = self.project.remainingresource(int(num))
