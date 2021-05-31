@@ -18,6 +18,7 @@ cd ..
 mkdir ~/.edconf/
 sudo cp -r equipmentdiagnostics/model ~/.edconf/
 
+cd deb
 cd equipmentdiagnostics*
 
 sudo debmake -n -b':python3'
