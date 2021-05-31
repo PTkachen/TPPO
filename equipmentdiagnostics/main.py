@@ -42,6 +42,11 @@ def main():
                  __/ |
                 |___/                                '''
 
+    home = os.path.expanduser('~')
+    if not os.path.exists(f'{home}/.edconf'):
+    	print(f'Создание {home}/.edconf')
+    	os.mkdir(f'{home}/.edconf')
+
     db = loadconfig()
 
     print('Подключение к базе данных')
