@@ -145,12 +145,7 @@ class EDiag:
         print(f'Кол-во точек для обучения: {len(tdata)}')
         n = NN()
         n.learn(tdata, tout)
-        #x = input('Сохранить старую модель? y/n ') ### TODO: заставить это работать
-        x = 'n'
-        if x == 'y':
-            os.rename('model', 'model_bc')
-            print('backup')
-        n.save('model')
+        n.save(f'{os.path.expanduser("~")}/.edconf/model')
 
 
 
@@ -190,10 +185,15 @@ class EDiag:
         #return n.predict([list(vect)])
     #Метод определения остаточного ресурса. На вход получает self - ссылку на самого себя, vect - вектор признаков. Возвращает численное значение остаточного ресурса
     def remainingresource(self, num = 0):
-        n = NN('model')
+
+        if not os.path.exists(f'{os.path.expanduser("~")}/.edconf/model'):
+            print('Отсутсвует модель!\nИспользуйте help reference')
+            return []
+
+        n = NN(f'{os.path.expanduser("~")}/.edconf/model')
 
         if not self.checkdata():
-            return None
+            return []
 
         pdata = []
         for i, file in enumerate(self.files):

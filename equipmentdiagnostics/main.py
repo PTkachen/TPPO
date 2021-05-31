@@ -163,7 +163,7 @@ def main():
                             else:
                                 num = 0
                             rur = self.project.remainingresource(int(num))
-                            if any(rur):
+                            if len(rur) > 0:
                                 if rur[-1][0] <= rur[0][0]:
                                     print('Подшипник изнашивается')
                                 else:

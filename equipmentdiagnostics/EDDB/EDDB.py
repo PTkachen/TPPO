@@ -8,12 +8,13 @@ def createconfig():
     cfg['DBName'] = input('Имя базы данных: ')
     name = cfg['UserName'] = input('Имя пользователя: ')
     cfg['Password'] = getpass.getpass(f'Пароль для {name}@{host}: ')
-    with open('db_config.json', 'w') as f:
+    with open(f'{os.path.expanduser("~")}/.edconf/db_config.json', 'w') as f:
         json.dump(cfg, f)
 
 def configisvalid():
-    if os.path.exists('db_config.json'):
-        with open('db_config.json') as json_file:
+    home = os.path.expanduser('~')
+    if os.path.exists(f'{home}/.edconf/db_config.json'):
+        with open(f'{home}/.edconf/db_config.json') as json_file:
             db = json.load(json_file)
         try:
             connection = mysql.connector.connect(
@@ -30,14 +31,15 @@ def configisvalid():
         print('Конфиг пропал!')
 
 def loadconfig():
-    if os.path.exists('db_config.json'):
+    home = os.path.expanduser('~')
+    if os.path.exists(f'{home}/.edconf/db_config.json'):
         while not configisvalid():
             x = input('Ошибка конфига!\nИсправить? y/n ')
             if x == 'y':
                 createconfig()
             else:
                 quit(1)
-        with open('db_config.json') as json_file:
+        with open(f'{home}/.edconf/db_config.json') as json_file:
             db = json.load(json_file)
             return db
     else:
