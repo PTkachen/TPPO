@@ -14,6 +14,8 @@ mkdir deb
 tar -C "deb" -xzmf equipmentdiagnostics*.tar.gz
 cd deb
 
+mkdir ~/.edconf/
+
 cd equipmentdiagnostics*
 
 sudo debmake -n -b':python3'
