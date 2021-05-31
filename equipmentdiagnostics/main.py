@@ -84,7 +84,7 @@ def main():
                 return True
 
         def do_createp(self, arg):
-            'Создать проект \nПример: ediag> createp <имя проекта>'
+            'Создать проект \nПример: createp <имя проекта>'
             if arg:
                 if arg in self.listp:
                     print(f'{arg} уже существует!')
@@ -116,7 +116,7 @@ def main():
                 print('Использлвать вне проекта')
 
         def do_usep(self, arg):
-            'Загрузить проект'
+            'Загрузить проект\nПример: usep <имя проекта>'
             if arg:
                 if arg in self.listp:
                     b, s = database.get_Project_stats(arg)
@@ -145,7 +145,7 @@ def main():
                 self.project = None
 
         def do_load(self, arg):
-            "Загрузить датасет"
+            "Загрузить датасет\nПример: load /путь/до/данных/"
             if arg or self.project:
                 if self.project == None:
                     print('Вы не в проекте')
@@ -193,7 +193,7 @@ def main():
                 print('Укажите путь!')
 
         def do_trend(self, arg):
-            'Постоение графика тренда'
+            'Постоение графика тренда\nПример: trend <название картинки>\nЕсли не указать название то сохранится в формате <дата>.png'
             lastmes = 0
             if self.project == None:
                 print('Вы не в проекте')
@@ -236,7 +236,7 @@ def main():
                         print(f'График тренда построен!\nfile://{img}')
 
         def do_removep(self, arg):
-            'Удалить проект'
+            'Удалить проект\nПример: removep <имя проекта>'
             if self.project == None:
                 if arg and arg in self.listp:
                     a = input(f'Вы действительно хотите удалить {arg}? y/n ')
@@ -252,7 +252,11 @@ def main():
                         print('Укажите имя проекта!')
 
         def do_reference(self, arg):
-            "Сменить модель"
+            '''Обучить новую модель по датасету
+ВНИМАНИЕ! для обучения нобходима возможность посмотреть график !ВНИМАНИЕ!
+Необходимо будет указать номер файла до которого все было хорошо,
+номер файла с которого началась поломка
+Пример: reference /путь/до/данных'''
             if arg:
                 if self.project == None:
                     print('Вы не в проекте')
@@ -278,6 +282,7 @@ def main():
                 print('Укажите путь!')
 
         def do_configdb(self, arg):
+            'Сменить данные для подключения к базе данных'
             db_config()
             database.CloseConnecton()
             print('Reconnecting...')
