@@ -13,8 +13,10 @@ cd ..
 mkdir deb
 tar -C "deb" -xzmf equipmentdiagnostics*.tar.gz
 cd deb
+cd ..
 
 mkdir ~/.edconf/
+sudo cp -r equipmentdiagnostics/model ~/.edconf/
 
 cd equipmentdiagnostics*
 
