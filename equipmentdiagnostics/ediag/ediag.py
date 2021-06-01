@@ -5,12 +5,14 @@ from scipy.stats import norm, kurtosis
 import matplotlib.pyplot as plt
 from detect_delimiter import detect
 
+#метод проверки на критический ресурс
 def criticalresource(rur):
     for i in range(round(len(rur) * 0.05)):
         if rur[len(rur) - 1 - i] < 0.1:
             return True
     return False
 
+#Метод построения тренда остаточного ресурса по последним 5% замеров
 def bulildTrend(rur):
     h = (rur[-1] - rur[round(len(rur) * 0.95)]) / round(len(rur) * 0.05)
     trend = [rur[-1]]
@@ -30,6 +32,7 @@ def bulildTrend(rur):
 
     return trend, count, h
 
+#метод нахождения разгранечителя в файлах
 def getdelimiter(file):
     f = open(file)
     line = f.readline()
@@ -64,7 +67,7 @@ class EDiag:
             return False
 
         return True
-
+    #Метод проверки данных
     def checkdata(self):
         if len(self.files) == 0:
             print('Нечего проверять')
