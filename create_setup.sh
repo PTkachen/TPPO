@@ -10,7 +10,7 @@ cd ..
 
 #mv equipmentdiagnostics*.tar.gz deb
 
-mkdir deb
+mkdir -p deb
 tar -C "deb" -xzmf equipmentdiagnostics*.tar.gz
 cd deb
 cd ..
