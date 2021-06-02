@@ -16,19 +16,21 @@ def criticalresource(rur):
 def bulildTrend(rur):
     h = (rur[-1] - rur[round(len(rur) * 0.95)]) / round(len(rur) * 0.05)
     trend = [rur[-1]]
-    count = 0
     if h == 0:
         print('аа че делать')
 
     if h < 0:
         while trend[-1] > 0.0:
             trend.append(trend[-1] + h)
-            count+=1
 
     if h > 0:
         while trend[-1] < 1.0:
             trend.append(trend[-1] + h)
-            count+=1
+
+    count = len(trend)
+
+    if count > 64:
+        trend = trend[:64]
 
     return trend, count, h
 
