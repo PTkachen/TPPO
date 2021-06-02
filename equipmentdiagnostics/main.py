@@ -184,6 +184,9 @@ def main():
                                     print(f'{bcolors.WARNING}!ВНИМАНИЕ! НИЗКИЙ ОСТАТОЧНЫЙ РЕСУРС !ВНИМАНИЕ!{bcolors.ENDC}')
 
                                 self.lastmes = len(rur)
+                                if database.dataexists(self.project.name):
+                                    print('Удаление старых данных!')
+                                    database.clean(self.project.name)
                                 print(f'Запись в базу данных {database.dbname}!')
                                 database.insert_dots([(self.project.name, str(r[0])) for r in rur])
                                 database.update_project(self.project.name, rur2[-1])
@@ -212,16 +215,14 @@ def main():
                         print(f'Trend:{h}')
                         database.update_projectTrend(self.project.name, h)
                         if c > 0 and h < 0:
-                            plt.plot(np.concatenate((smooth, t)))
-                            print(f'Readings remaining: {c}')
-                        else:
-                            plt.plot(smooth)
-
+                            print(f'Отсалось {c} чтений')
+							
+                        plt.plot(np.concatenate((smooth, t)))
                         plt.legend(['Остатончный ресурс', 'График'])
                     else:
                         plt.plot(mes, '-')
                         plt.legend(['Остаточный ресурс'])
-                        print('not enough points!')
+                        print('Недостаточно точек!!')
 
                     if lastmes > 0:
                         plt.axvline(x=(lastmes), color='r')

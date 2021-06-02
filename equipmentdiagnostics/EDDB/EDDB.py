@@ -129,6 +129,16 @@ class edDB:
 
         self.connection.commit()
 
+    def clean(self, book_id):
+        #db_config = read_db_config()
+
+        query = "DELETE FROM Trend WHERE PROJNAME = %s"
+
+        self.cursor.execute(query, (book_id,))
+
+        self.connection.commit()
+
+
     def CloseConnecton(self):
         self.cursor.close()
         self.connection.close()
