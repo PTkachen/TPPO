@@ -15,7 +15,7 @@ tar -C "deb" -xzmf equipmentdiagnostics*.tar.gz
 cd deb
 cd ..
 
-rm -r ~/.edconf > /dev/null
+sudo rm -r ~/.edconf > /dev/null
 mkdir -p ~/.edconf/
 sudo cp -r equipmentdiagnostics/model ~/.edconf/
 
