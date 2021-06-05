@@ -36,11 +36,15 @@ def bulildTrend(rur):
 
 #метод нахождения разгранечителя в файлах
 def getdelimiter(file):
-    f = open(file)
-    line = f.readline()
-    f.close()
-    delimiter = detect(line)
-    return delimiter
+    try:
+        f = open(file)
+        line = f.readline()
+        f.close()
+        delimiter = detect(line)
+        return delimiter
+    except UnicodeDecodeError:
+        return None
+
 
 
 class EDiag:
@@ -115,6 +119,10 @@ class EDiag:
                     return
                 data.append(d)
                 print(f'Загружен файл {i+1}/{len(self.files)}', end = '\r')
+            else:
+                print(f'В файле {file} не найден разграничитель!')
+                return
+
         print(f'Загржуно {len(self.files)} файлов!           ')
 
         plt.plot(data)
@@ -185,8 +193,8 @@ class EDiag:
                 vect = self.markup(FILE, b)
                 return vect / np.linalg.norm(vect)
         else:
-            print('No delimiter!')
-            return None
+            print(f'В файле {file} не найден разграничитель!!')
+            return []
         #return n.predict([list(vect)])
     #Метод определения остаточного ресурса. На вход получает self - ссылку на самого себя, vect - вектор признаков. Возвращает численное значение остаточного ресурса
     def remainingresource(self, num = 0):
@@ -205,7 +213,7 @@ class EDiag:
             d = self.markupfrompathnorm(file, num)
             if len(d) == 0:
                 print('Проверьте данные!')
-                return None
+                return []
             pdata.append(d)
             print(f'Загружен файл {i+1}/{len(self.files)}', end = '\r')
         print(f'Загружено {len(self.files)} файлов!            ')
