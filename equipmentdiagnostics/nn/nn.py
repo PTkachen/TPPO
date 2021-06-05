@@ -7,7 +7,7 @@ from tensorflow import keras
 
 class NN:
     model = Sequential()
-    
+
     def __init__(self, path=''):
         if path:
             self.model = keras.models.load_model(path)
@@ -33,11 +33,14 @@ class NN:
         self.model.compile(loss='binary_crossentropy',
                            optimizer='adam', metrics=['accuracy'])
         self.model.fit(x, y, epochs=150, batch_size=10, verbose=0)
-    
+
     #Метод предсказывания по характеристикам
     def predict(self, X):
         predictions = self.model.predict(X)
         return predictions
     #Метод сохранения модели
     def save(self, path):
-        self.model.save(path)
+        if len(self.model.layers) > 0:
+            self.model.save(path)
+        else:
+            print('NN debug: run learn first!')    
