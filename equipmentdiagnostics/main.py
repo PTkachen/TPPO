@@ -289,7 +289,41 @@ def main():
             print('Reconnecting...')
             database.edDB(db['Host'], db['UserName'], db['Password'], db['DBName'])
 
-
+        def do_loadzip(self, arg):
+            zf = ZipFile(arg, 'r')
+            zf.extractall('~/.edconf/temp')
+            zf.close()
+            print('Ваш ZIP-файл разархивирован')
+            if self.project.loaddata('~/.edconf/temp'):
+                if self.project.bearings * self.project.sensors > 1:
+                    num = input(f'По номеру какого канала строить 1:{self.project.bearings * self.project.sensors}?: ')
+                    try:
+                        num = int(num)-1
+                    except ValueError:
+                        print('Введено не число')
+                        return
+                    if num < 0 or num > self.project.bearings * self.project.sensors -1:
+                        print('Попытка указать на несуществующий поток')
+                        return
+                else:
+                    num = 0
+                rur = self.project.remainingresource(int(num))
+                if len(rur) > 0:
+                    if rur[-1][0] <= rur[0][0]:
+                        print('Подшипник изнашивается')
+                    else:
+                        print('Подшипник обкатывается')
+                    flag = criticalresource(rur)
+                    if len(rur) >= 101:
+                        rur2 = savgol_filter(rur[:,0], 101, 3)
+                    else:
+                        rur2 = rur[:,0]
+                    #print(f'hello{avg}')
+                    print(f'Остаточный ресурс {round(rur2[-1] * 100, 1)}%')
+                    if flag:
+                        print(f'{bcolors.WARNING}!ВНИМАНИЕ! НИЗКИЙ ОСТАТОЧНЫЙ РЕСУРС !ВНИМАНИЕ!{bcolors.ENDC}')
+            #os.remove('~/.edconf/temp/2nd_test')
+    
     EDiagShell().cmdloop()
 
 if __name__ == '__main__':
